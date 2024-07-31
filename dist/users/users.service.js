@@ -17,28 +17,66 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const user_entity_1 = require("./entities/user.entity");
 const typeorm_2 = require("typeorm");
+const bcrypt = require("bcrypt");
+const jwt_1 = require("@nestjs/jwt");
 let UsersService = class UsersService {
-    constructor(userRepository) {
+    constructor(userRepository, jwtService) {
         this.userRepository = userRepository;
+        this.jwtService = jwtService;
     }
     async create(createUserDto) {
-        const newUser = this.userRepository.create(createUserDto);
-        return await this.userRepository.save(newUser);
+        try {
+            const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+            createUserDto.password = hashedPassword;
+            const savedUser = await this.userRepository.save(createUserDto);
+            if (savedUser == null || savedUser == undefined) {
+                throw new common_1.HttpException("Kullanıcı oluşturulamadı", 400);
+            }
+            return { message: "Kullanıcı oluşturuldu", user: savedUser };
+        }
+        catch (error) {
+            throw error;
+        }
     }
-    async findAll() {
-        return await this.userRepository.find();
+    async login(loginDto) {
+        try {
+            const user = await this.userRepository.findOne({ where: { email: loginDto.email } });
+            if (user == undefined || user == null) {
+                throw new common_1.HttpException("User not found", 404);
+            }
+            const result = await bcrypt.compare(loginDto.password, user.password);
+            console.log(result);
+            const token = this.jwtService.sign({ id: user.id }, { expiresIn: '15d', privateKey: "adkjfbndabsnfknjadhfjvmnöamdhjmngöhkdahjfbmdajhlhön" });
+            return { message: result, token: token };
+        }
+        catch (error) {
+            throw error;
+        }
     }
     async findOne(id) {
-        return await this.userRepository.findOne({ where: { id: id } });
+        try {
+            const usertoFind = await this.userRepository.findOne({ where: { id: id } });
+            if (usertoFind == null || usertoFind == undefined) {
+                throw new common_1.HttpException("User not found", 404);
+            }
+            return usertoFind;
+        }
+        catch (error) {
+            throw error;
+        }
     }
     async update(id, updateUserDto) {
-        const userToUpdate = await this.userRepository.findOne({ where: { id: id } });
-        if (!userToUpdate) {
-            return undefined;
+        try {
+            const userToUpdate = await this.userRepository.findOne({ where: { id: id } });
+            if (userToUpdate == null || userToUpdate == undefined) {
+                throw new common_1.HttpException("There is No User to Update", 404);
+            }
+            Object.assign(userToUpdate, updateUserDto);
+            await this.userRepository.save(userToUpdate);
+            return userToUpdate;
         }
-        Object.assign(userToUpdate, updateUserDto);
-        await this.userRepository.save(userToUpdate);
-        return userToUpdate;
+        catch (error) {
+        }
     }
     async remove(id) {
         await this.userRepository.delete(id);
@@ -48,6 +86,8 @@ exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __param(1, (0, common_1.Inject)(jwt_1.JwtService)),
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        jwt_1.JwtService])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map

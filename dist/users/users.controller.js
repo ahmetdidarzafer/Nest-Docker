@@ -18,6 +18,7 @@ const users_service_1 = require("./users.service");
 const create_user_dto_1 = require("./dto/create-user.dto");
 const update_user_dto_1 = require("./dto/update-user.dto");
 const swagger_1 = require("@nestjs/swagger");
+const login_dto_1 = require("./dto/login.dto");
 let UsersController = class UsersController {
     constructor(userService) {
         this.userService = userService;
@@ -25,11 +26,11 @@ let UsersController = class UsersController {
     findOne(id) {
         return this.userService.findOne(id);
     }
+    login(loginDto) {
+        return this.userService.login(loginDto);
+    }
     create(createUserDto) {
         return this.userService.create(createUserDto);
-    }
-    findAll() {
-        return this.userService.findAll();
     }
     update(id, updateUserDto) {
         return this.userService.update(id, updateUserDto);
@@ -47,6 +48,13 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "findOne", null);
 __decorate([
+    (0, common_1.Post)('login'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [login_dto_1.LoginDTO]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "login", null);
+__decorate([
     (0, common_1.Post)('createUser'),
     (0, common_1.UsePipes)(new common_1.ValidationPipe()),
     __param(0, (0, common_1.Body)()),
@@ -54,12 +62,6 @@ __decorate([
     __metadata("design:paramtypes", [create_user_dto_1.CreateUserDto]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "create", null);
-__decorate([
-    (0, common_1.Get)(),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
-], UsersController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Patch)('updateUser/:id'),
     (0, common_1.UsePipes)(new common_1.ValidationPipe()),

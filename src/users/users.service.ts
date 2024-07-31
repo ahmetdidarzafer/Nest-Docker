@@ -1,47 +1,92 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable,Inject } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from "@nestjs/typeorm";
 import { User } from "./entities/user.entity";
 import { Repository } from "typeorm";
-
+import * as bcrypt from 'bcrypt'
+import { LoginDTO } from './dto/login.dto';
+import { JwtService } from '@nestjs/jwt';
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
-  ) {}
+    @Inject(JwtService) private readonly jwtService:JwtService
+  ) { }
 
 
   async create(createUserDto: CreateUserDto) {
-    const newUser = this.userRepository.create(createUserDto);
-    return await this.userRepository.save(newUser)
+    try {
+      //BU KISIM ŞİFRE HASHLEMEK İÇİN KULLANLIR
+      const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+      //BU KISIM ŞİFRE HASHLEMEK İÇİN KULLANLIR
+      createUserDto.password = hashedPassword;
+
+      const savedUser = await this.userRepository.save(createUserDto);
+
+      if (savedUser == null || savedUser == undefined) {
+        throw new HttpException("Kullanıcı oluşturulamadı", 400)
+      }
+      return { message: "Kullanıcı oluşturuldu", user: savedUser }
+    } catch (error) {
+      throw error
+    }
+
   }
 
-  async findAll() {
-    return await this.userRepository.find();
+  async login(loginDto: LoginDTO) {
+    try {
+      const user = await this.userRepository.findOne({ where: { email: loginDto.email } })
+      if (user == undefined || user == null) {
+        throw new HttpException("User not found", 404)
+      }
+
+      const result = await bcrypt.compare(loginDto.password, user.password);
+      console.log(result);
+      const token = this.jwtService.sign({id:user.id},{expiresIn:'15d',privateKey:"adkjfbndabsnfknjadhfjvmnöamdhjmngöhkdahjfbmdajhlhön"})
+      return {message: "Login Successful", token:token};
+
+   
+    } catch (error) {
+      throw error
+    }
   }
 
   async findOne(id: number) {
-    return await this.userRepository.findOne({where: {id:id}});
+    try {
+      const usertoFind = await this.userRepository.findOne({ where: { id: id } });
+      if (usertoFind == null || usertoFind == undefined) {
+        throw new HttpException("User not found", 404)
+      }
+      return usertoFind;
+    } catch (error) {
+      throw error
+    }
+
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
-    const userToUpdate = await this.userRepository.findOne({where: {id:id}})
 
-    if (!userToUpdate){
-      return undefined;
+    try {
+      const userToUpdate = await this.userRepository.findOne({ where: { id: id } });
+      if (userToUpdate == null || userToUpdate == undefined) {
+        throw new HttpException("There is No User to Update", 404)
+      }
+      Object.assign(userToUpdate, updateUserDto);
+
+      await this.userRepository.save(userToUpdate);
+
+
+      return userToUpdate;
+    }
+    catch (error) {
+      throw error;
     }
 
-    Object.assign(userToUpdate, updateUserDto);
-
-    await this.userRepository.save(userToUpdate);
-
-    return userToUpdate;
   }
 
   async remove(id: number) {
     await this.userRepository.delete(id);
   }
 }
- 

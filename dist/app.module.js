@@ -11,7 +11,13 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const user_entity_1 = require("./users/entities/user.entity");
 const users_module_1 = require("./users/users.module");
+const movies_module_1 = require("./movies/movies.module");
+const movie_entity_1 = require("./movies/entities/movie.entity");
+const auth_middleware_1 = require("./middleware/auth.middleware");
 let AppModule = class AppModule {
+    configure(consumer) {
+        consumer.apply(auth_middleware_1.AuthMiddleware).forRoutes('movies');
+    }
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
@@ -24,11 +30,12 @@ exports.AppModule = AppModule = __decorate([
                 username: 'azafer',
                 password: 'ahmet123',
                 database: 'movie_db',
-                entities: [user_entity_1.User],
+                entities: [user_entity_1.User, movie_entity_1.Movie],
                 synchronize: true,
                 logging: true
             }),
-            users_module_1.UsersModule
+            users_module_1.UsersModule,
+            movies_module_1.MoviesModule
         ]
     })
 ], AppModule);
