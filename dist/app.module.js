@@ -14,6 +14,7 @@ const users_module_1 = require("./users/users.module");
 const movies_module_1 = require("./movies/movies.module");
 const movie_entity_1 = require("./movies/entities/movie.entity");
 const auth_middleware_1 = require("./middleware/auth.middleware");
+const jwt_1 = require("@nestjs/jwt");
 let AppModule = class AppModule {
     configure(consumer) {
         consumer.apply(auth_middleware_1.AuthMiddleware).forRoutes('movies');
@@ -23,6 +24,7 @@ exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            jwt_1.JwtModule,
             typeorm_1.TypeOrmModule.forRoot({
                 type: 'postgres',
                 host: 'db',

@@ -24,6 +24,9 @@ let UsersService = class UsersService {
         this.userRepository = userRepository;
         this.jwtService = jwtService;
     }
+    async getAll() {
+        return await this.userRepository.find();
+    }
     async create(createUserDto) {
         try {
             const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
@@ -46,8 +49,11 @@ let UsersService = class UsersService {
             }
             const result = await bcrypt.compare(loginDto.password, user.password);
             console.log(result);
+            if (result == false) {
+                throw new common_1.HttpException('Login Failed', 401);
+            }
             const token = this.jwtService.sign({ id: user.id }, { expiresIn: '15d', privateKey: "adkjfbndabsnfknjadhfjvmnöamdhjmngöhkdahjfbmdajhlhön" });
-            return { message: result, token: token };
+            return { message: "Login Successful", token: token };
         }
         catch (error) {
             throw error;
@@ -68,14 +74,18 @@ let UsersService = class UsersService {
     async update(id, updateUserDto) {
         try {
             const userToUpdate = await this.userRepository.findOne({ where: { id: id } });
-            if (userToUpdate == null || userToUpdate == undefined) {
-                throw new common_1.HttpException("There is No User to Update", 404);
+            const hashedOldPassword = await bcrypt.hash(updateUserDto.old_password, 10);
+            if (userToUpdate == null || userToUpdate == undefined || userToUpdate.password != hashedOldPassword) {
+                throw new common_1.HttpException("Old password does not match or there is no user to update", 404);
             }
-            Object.assign(userToUpdate, updateUserDto);
+            const hashedPassword = await bcrypt.hash(updateUserDto.password, 10);
+            updateUserDto.password = hashedPassword;
+            this.userRepository.merge(userToUpdate, updateUserDto);
             await this.userRepository.save(userToUpdate);
             return userToUpdate;
         }
         catch (error) {
+            throw error;
         }
     }
     async remove(id) {

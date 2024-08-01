@@ -8,26 +8,35 @@ import { MoviesModule } from './movies/movies.module';
 import { Movie } from './movies/entities/movie.entity';
 import { AuthMiddleware } from './middleware/auth.middleware';
 import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 
 
 @Module({
   imports: [
     JwtModule,
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'db',
-      port: 5432,
-      username: 'azafer',
-      password: 'ahmet123',
-      database: 'movie_db',
-      entities: [User, Movie], 
-      synchronize: true,
-      logging: true
+    ConfigModule.forRoot({
+      isGlobal: true
+    }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get<string>('DATABASE_HOST'),
+        port: configService.get<number>('DATABASE_PORT'),
+        username: configService.get<string>('DATABASE_USER'),
+        password: configService.get<string>('DATABASE_PASSWORD'),
+        database: configService.get<string>('DATABASE_NAME'),
+        entities: [User, Movie], 
+        synchronize: true,
+        logging: true
+      }),
+      inject: [ConfigService],
     }),
     UsersModule,
-    MoviesModule
-  ]
+    MoviesModule,
+    
+  ],
 })
 export class AppModule implements NestModule{
   configure(consumer: MiddlewareConsumer) {

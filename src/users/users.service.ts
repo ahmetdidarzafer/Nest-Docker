@@ -7,14 +7,18 @@ import { Repository } from "typeorm";
 import * as bcrypt from 'bcrypt'
 import { LoginDTO } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    @Inject(JwtService) private readonly jwtService:JwtService
+    @Inject(JwtService) private readonly jwtService:JwtService,
+    private configService: ConfigService,
   ) { }
-
+  async getAll(){
+    return await this.userRepository.find();
+  }
 
   async create(createUserDto: CreateUserDto) {
     try {
@@ -44,7 +48,10 @@ export class UsersService {
 
       const result = await bcrypt.compare(loginDto.password, user.password);
       console.log(result);
-      const token = this.jwtService.sign({id:user.id},{expiresIn:'15d',privateKey:"adkjfbndabsnfknjadhfjvmnöamdhjmngöhkdahjfbmdajhlhön"})
+      if (result == false){
+        throw new HttpException('Login Failed', 401)
+      }
+      const token = this.jwtService.sign({id:user.id},{expiresIn:'15d',privateKey:this.configService.get<string>('JWT_SECRET')})
       return {message: "Login Successful", token:token};
 
    
@@ -71,12 +78,18 @@ export class UsersService {
     try {
       const userToUpdate = await this.userRepository.findOne({ where: { id: id } });
       if (userToUpdate == null || userToUpdate == undefined) {
-        throw new HttpException("There is No User to Update", 404)
+        throw new HttpException("There is no user to update", 404);
       }
-      Object.assign(userToUpdate, updateUserDto);
+      const result = await bcrypt.compare(updateUserDto.old_password, userToUpdate.password);
 
+      if (result == false){
+        throw new HttpException('Old password does not match', 401);
+      }
+      const hashedPassword = await bcrypt.hash(updateUserDto.password, 10);
+      updateUserDto.password = hashedPassword;
+      //Object.assign(userToUpdate, updateUserDto);
+      this.userRepository.merge(userToUpdate, updateUserDto);
       await this.userRepository.save(userToUpdate);
-
 
       return userToUpdate;
     }

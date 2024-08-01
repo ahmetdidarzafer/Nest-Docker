@@ -20,15 +20,27 @@ let AuthMiddleware = class AuthMiddleware {
         this.jwtService = jwtService;
     }
     use(req, res, next) {
-        const token = req.headers.authorization;
-        const decoded = this.jwtService.verify(token, { publicKey: "adkjfbndabsnfknjadhfjvmnöamdhjmngöhkdahjfbmdajhlhön" });
-        if (decoded) {
-            const id = decoded.id;
-            console.log("TOKEN VALID");
-            next();
+        try {
+            const token = req.headers.authorization;
+            console.log(token);
+            const tokenWithoutBearer = token.split(' ')[1];
+            const decoded = this.jwtService.verify(tokenWithoutBearer, { publicKey: "adkjfbndabsnfknjadhfjvmnöamdhjmngöhkdahjfbmdajhlhön" });
+            if (decoded) {
+                const id = decoded.id;
+                console.log("TOKEN VALID");
+                next();
+            }
+            else {
+                throw new common_1.HttpException("Unauthorized", 401);
+            }
         }
-        else {
-            throw new common_1.HttpException("Unauthorized", 401);
+        catch (error) {
+            if (typeof error == typeof common_1.HttpException) {
+                throw error;
+            }
+            else {
+                throw new common_1.HttpException("Unauthorized", 401);
+            }
         }
     }
 };

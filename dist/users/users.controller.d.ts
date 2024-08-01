@@ -5,9 +5,10 @@ import { LoginDTO } from "./dto/login.dto";
 export declare class UsersController {
     private readonly userService;
     constructor(userService: UsersService);
+    getAll(): Promise<import("./entities/user.entity").User[]>;
     findOne(id: number): Promise<import("./entities/user.entity").User>;
     login(loginDto: LoginDTO): Promise<{
-        message: boolean;
+        message: string;
         token: string;
     }>;
     create(createUserDto: CreateUserDto): Promise<{

@@ -23,6 +23,9 @@ let UsersController = class UsersController {
     constructor(userService) {
         this.userService = userService;
     }
+    getAll() {
+        return this.userService.getAll();
+    }
     findOne(id) {
         return this.userService.findOne(id);
     }
@@ -41,6 +44,12 @@ let UsersController = class UsersController {
 };
 exports.UsersController = UsersController;
 __decorate([
+    (0, common_1.Get)('getAllUsers'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "getAll", null);
+__decorate([
     (0, common_1.Get)('findUser/:id'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -55,7 +64,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "login", null);
 __decorate([
-    (0, common_1.Post)('createUser'),
+    (0, common_1.Post)('signUp'),
     (0, common_1.UsePipes)(new common_1.ValidationPipe()),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),

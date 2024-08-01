@@ -28,7 +28,12 @@ __decorate([
 ], UpdateUserDto.prototype, "email", void 0);
 __decorate([
     (0, class_validator_1.IsNotEmpty)(),
-    (0, swagger_1.ApiProperty)({ description: 'updated password' }),
+    (0, swagger_1.ApiProperty)({ description: 'old password' }),
+    __metadata("design:type", String)
+], UpdateUserDto.prototype, "old_password", void 0);
+__decorate([
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, swagger_1.ApiProperty)({ description: 'new password' }),
     __metadata("design:type", String)
 ], UpdateUserDto.prototype, "password", void 0);
 //# sourceMappingURL=update-user.dto.js.map

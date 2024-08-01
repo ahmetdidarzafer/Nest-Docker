@@ -12,6 +12,10 @@ export class UpdateUserDto {
   readonly email: string;
 
   @IsNotEmpty()
-  @ApiProperty({ description: 'updated password' })
-  readonly password: string;
+  @ApiProperty({description: 'old password'})
+  old_password: string;
+
+  @IsNotEmpty()
+  @ApiProperty({ description: 'new password' })
+  password: string;
 }

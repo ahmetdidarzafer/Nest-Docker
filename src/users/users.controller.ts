@@ -11,6 +11,11 @@ import { LoginDTO } from "./dto/login.dto";
 export class UsersController {
   constructor(private readonly userService: UsersService) {}
 
+  @Get('getAllUsers')
+  getAll(){
+    return this.userService.getAll();
+  }
+
   @Get('findUser/:id')
   findOne(@Param('id') id: number) {
     return this.userService.findOne(id);
